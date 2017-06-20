@@ -161,7 +161,8 @@ pipewatch_monitor_init(pipewatch_state_t *s)
             (void)close(mfd[1]);
             return -1;
         case 0:
-            (void)close(mfd[1]);
+            if (close(mfd[1]) < 0)
+                return -1;
             n = read(mfd[0], &buf, 1);
             (void)n;
             if (s->verbose)
@@ -176,7 +177,7 @@ pipewatch_monitor_init(pipewatch_state_t *s)
             return mpid;
     }
 
-    return 0;
+    return -1;
 }
 
     static int
