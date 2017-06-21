@@ -53,6 +53,12 @@ static int PIPEWATCH_SIGWRITE_FILENO;
 
 extern char *__progname;
 
+#define VERBOSE(__s, __n, ...) do { \
+    if (__s->verbose >= __n) { \
+        (void)fprintf(stderr, __VA_ARGS__); \
+    } \
+} while (0)
+
     static void
 sighandler(int sig, siginfo_t *info, void *context)
 {
@@ -165,10 +171,8 @@ pipewatch_monitor_init(pipewatch_state_t *s)
                 return -1;
             n = read(mfd[0], &buf, 1);
             (void)n;
-            if (s->verbose)
-                (void)fprintf(stderr,
-                        "monitor: broadcasting signal=%d pgid=%d\n",
-                        s->sig, s->pid);
+			VERBOSE(s, 1, "monitor: broadcasting signal=%d pgid=%d\n",
+                    s->sig, s->pid);
             pipewatch_signal_broadcast(s, s->pid * -1, s->sig);
             exit(0);
             break;
@@ -255,17 +259,13 @@ pipewatch_wait(pipewatch_state_t *s, pipeline *p)
         }
 
         if (info.si_signo != SIGCHLD) {
-            if (s->verbose)
-                (void)fprintf(stderr, "signal=%d:%d\n", info.si_pid,
-                        info.si_signo);
+            VERBOSE(s, 1, "signal=%d:%d\n", info.si_pid, info.si_signo);
 
             pipewatch_signal_broadcast(s, 0, info.si_signo);
             continue;
         }
 
-        if (s->verbose)
-            (void)fprintf(stderr, "status=%d:%d\n", info.si_pid,
-                    info.si_status);
+        VERBOSE(s, 1, "status=%d:%d\n", info.si_pid, info.si_status);
 
         if (info.si_code == CLD_EXITED && info.si_status != 0)
             return info.si_status;
