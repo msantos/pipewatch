@@ -46,6 +46,7 @@ static int pipewatch_signal_init();
 static int pipewatch_wait(pipewatch_state_t *s, pipeline *p);
 static void pipewatch_signal_broadcast(pipewatch_state_t *s, pid_t pid,
         int sig);
+static void pipewatch_print_process_tree(pipewatch_state_t *s, pipeline *p);
 static void usage();
 
 static int PIPEWATCH_SIGREAD_FILENO;
@@ -219,6 +220,29 @@ pipewatch_signal_init()
     return 0;
 }
 
+    static void
+pipewatch_print_process_tree(pipewatch_state_t *s, pipeline *p)
+{
+    int i = 0;
+    int ncmd = pipeline_get_ncommands(p);
+    char *pipeline = pipeline_tostring(p);
+
+    (void)fprintf(stderr, "%s(%d,%d) %s\n", __progname, s->pid,
+            getpgrp(), pipeline);
+    free(pipeline);
+
+    if (s->monitor)
+        (void)fprintf(stderr, "   |-monitor(%d,%d)\n", s->mpid,
+                getpgid(s->mpid));
+
+    for (i = 0; i < ncmd; i++) {
+        (void)fprintf(stderr, "   |-%s(%d,%d)\n",
+                pipecmd_tostring(pipeline_get_command(p, i)),
+                pipeline_get_pid(p, i),
+                getpgid(pipeline_get_pid(p, i)));
+    }
+}
+
     static int
 pipewatch_wait(pipewatch_state_t *s, pipeline *p)
 {
@@ -226,27 +250,11 @@ pipewatch_wait(pipewatch_state_t *s, pipeline *p)
     int status;
     ssize_t n = 0;
     int ncmd = 0;
-    int i = 0;
 
     ncmd = pipeline_get_ncommands(p);
 
-    if (s->verbose) {
-        char *pipeline = pipeline_tostring(p);
-        (void)fprintf(stderr, "%s(%d,%d) %s\n", __progname, s->pid,
-                getpgrp(), pipeline);
-        free(pipeline);
-
-        if (s->monitor)
-            (void)fprintf(stderr, "   |-monitor(%d,%d)\n", s->mpid,
-                    getpgid(s->mpid));
-
-        for (i = 0; i < ncmd; i++) {
-            (void)fprintf(stderr, "   |-%s(%d,%d)\n",
-                    pipecmd_tostring(pipeline_get_command(p, i)),
-                    pipeline_get_pid(p, i),
-                    getpgid(pipeline_get_pid(p, i)));
-        }
-    }
+    if (s->verbose)
+        pipewatch_print_process_tree(s, p);
 
     for ( ; ; ) {
         n = read(PIPEWATCH_SIGREAD_FILENO, &info, sizeof(info));
