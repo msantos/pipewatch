@@ -15,3 +15,11 @@ $output
 EOF
     [ "$status" -eq "1" ]
 }
+
+@test "exit: test pipeline error" {
+    run pipewatch -v "sleep 300" "./doesnotexist"
+    cat<<EOF
+$output
+EOF
+    [ "$status" -eq "127" ]
+}
