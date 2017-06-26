@@ -22,6 +22,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <err.h>
+#include <getopt.h>
 
 #include <signal.h>
 #include <sys/types.h>
@@ -60,6 +61,14 @@ extern char *__progname;
     } \
 } while (0)
 
+static const struct option long_options[] =
+{
+    {"signal",        required_argument,  NULL, 's'},
+    {"monitor",       no_argument,        NULL, 'm'},
+    {"verbose",       no_argument,        NULL, 'v'},
+    {"help",          no_argument,        NULL, 'h'}
+};
+
     static void
 sighandler(int sig, siginfo_t *info, void *context)
 {
@@ -86,7 +95,7 @@ main(int argc, char *argv[])
     s->sig = SIGTERM;
     s->pid = getpid();
 
-    while ( (ch = getopt(argc, argv, "hms:v")) != -1) {
+    while ((ch = getopt_long(argc, argv, "hms:v", long_options, NULL)) != -1) {
         switch (ch) {
             case 'm':
                 s->monitor = 1;
@@ -337,6 +346,11 @@ pipewatch_signal_broadcast(pipewatch_state_t *s, pid_t pid, int sig)
     static void
 usage()
 {
-    errx(EXIT_FAILURE, "usage: [-v|-m|-s <signum>] <command> <...>\nversion: %s",
+    errx(EXIT_FAILURE, "[OPTION] <COMMAND> <...>\n"
+            "version: %s\n\n"
+            "-s, --signal <signum>\tsignal sent to process group on error\n"
+            "-m, --monitor\t\tfork monitor process\n"
+            "-v, --verbose\t\tverbose mode\n"
+            "-h, --help\t\thelp",
             PIPEWATCH_VERSION);
 }
