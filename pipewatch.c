@@ -66,7 +66,8 @@ static const struct option long_options[] =
     {"signal",        required_argument,  NULL, 's'},
     {"monitor",       no_argument,        NULL, 'm'},
     {"verbose",       no_argument,        NULL, 'v'},
-    {"help",          no_argument,        NULL, 'h'}
+    {"help",          no_argument,        NULL, 'h'},
+    {NULL,            0,                  NULL, 0}
 };
 
     static void
