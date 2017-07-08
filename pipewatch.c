@@ -267,6 +267,23 @@ pipewatch_wait(pipewatch_state_t *s, pipeline *p)
         pipewatch_print_process_tree(s, p);
 
     for ( ; ; ) {
+        for ( ; ; ) {
+            pid_t pid = waitpid(-1, &status, WNOHANG);
+
+            if (errno == ECHILD || pid == 0)
+                break;
+
+            if (pid < 0)
+                return 127+errno;
+
+            if (WEXITSTATUS(status) != 0)
+                return WEXITSTATUS(status);
+
+            ncmd--;
+            if (ncmd == 0)
+                goto PIPEWATCH_EXIT;
+        }
+
         n = read(PIPEWATCH_SIGREAD_FILENO, &info, sizeof(info));
 
         if (n != sizeof(info)) {
@@ -300,23 +317,6 @@ pipewatch_wait(pipewatch_state_t *s, pipeline *p)
 
             default:
                 return info.si_status;
-        }
-
-        for ( ; ; ) {
-            pid_t pid = waitpid(-1, &status, WNOHANG);
-
-            if (errno == ECHILD || pid == 0)
-                break;
-
-            if (pid < 0)
-                return 127+errno;
-
-            if (WEXITSTATUS(status) != 0)
-                return WEXITSTATUS(status);
-
-            ncmd--;
-            if (ncmd == 0)
-                goto PIPEWATCH_EXIT;
         }
     }
 
