@@ -208,13 +208,16 @@ pipewatch_signal_init()
     for (sig = 1; sig < NSIG; sig++) {
         switch (sig) {
             case SIGTRAP:
-
-            case SIGTTIN:
-            case SIGTTOU:
             case SIGTSTP:
             case SIGCONT:
             case SIGSTOP:
                 continue;
+
+            case SIGTTIN:
+            case SIGTTOU:
+                if (signal (sig, SIG_IGN) < 0)
+                    return -1;
+                break;
 
             default:
                 if (sigaction(sig, &act, NULL) < 0) {
@@ -293,6 +296,19 @@ pipewatch_wait(pipewatch_state_t *s, pipeline *p)
             return 127+errno;
         }
 
+        switch (info.si_status) {
+            case SIGTRAP:
+            case SIGTTIN:
+            case SIGTTOU:
+            case SIGTSTP:
+            case SIGCONT:
+            case SIGSTOP:
+                continue;
+
+            default:
+                break;
+        }
+
         if (info.si_signo != SIGCHLD) {
             VERBOSE(s, 1, "signal=%d:%d\n", info.si_pid, info.si_signo);
 
@@ -304,20 +320,6 @@ pipewatch_wait(pipewatch_state_t *s, pipeline *p)
 
         if (info.si_code == CLD_EXITED && info.si_status != 0)
             return info.si_status;
-
-        switch (info.si_status) {
-            case SIGTRAP:
-            case SIGTTIN:
-            case SIGTTOU:
-            case SIGTSTP:
-            case SIGCONT:
-            case SIGSTOP:
-            case 0:
-                break;
-
-            default:
-                return info.si_status;
-        }
     }
 
 PIPEWATCH_EXIT:
