@@ -318,8 +318,15 @@ pipewatch_wait(pipewatch_state_t *s, pipeline *p)
 
         VERBOSE(s, 1, "status=%d:%d\n", info.si_pid, info.si_status);
 
-        if (info.si_code == CLD_EXITED && info.si_status != 0)
-            return info.si_status;
+        switch (info.si_code) {
+            case CLD_EXITED:
+            case CLD_KILLED:
+                if (info.si_status != 0)
+                    return info.si_status;
+                break;
+            default:
+                break;
+        }
     }
 
 PIPEWATCH_EXIT:
