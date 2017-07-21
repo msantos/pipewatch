@@ -5,11 +5,11 @@
 }
 
 @test "exit: test pipeline success with monitor enabled" {
-    pipewatch -m "echo xxx" "cat" "grep --line-buffered x" "exec cat"
+    pipewatch --monitor "echo xxx" "cat" "grep --line-buffered x" "exec cat"
 }
 
 @test "exit: test pipeline error (first command)" {
-    run pipewatch -v "./doesnotexist" "grep --line-buffered a" "exec cat"
+    run pipewatch --verbose "./doesnotexist" "grep --line-buffered a" "exec cat"
     cat<<EOF
 $output
 EOF
@@ -17,7 +17,7 @@ EOF
 }
 
 @test "exit: test pipeline error (middle command)" {
-    run pipewatch -v "echo xxx" "cat" "grep --line-buffered a" "exec cat"
+    run pipewatch --verbose "echo xxx" "cat" "grep --line-buffered a" "exec cat"
     cat<<EOF
 $output
 EOF
@@ -25,7 +25,7 @@ EOF
 }
 
 @test "exit: test pipeline error (last command)" {
-    run pipewatch -v "sleep 300" "./doesnotexist"
+    run pipewatch --verbose "sleep 300" "./doesnotexist"
     cat<<EOF
 $output
 EOF
